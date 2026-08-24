@@ -73,7 +73,7 @@ export default function App() {
     return { cells, canPlace, baseY, baseX };
   }, [hoverCell, currentTool, currentRotation, gridWidth, occupancyGrid]);
 
-  // ----- Keyboard shortcut: R to rotate -----
+  // ----- Keyboard shortcuts -----
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // テキストエリアやインプットにフォーカスがある場合は無視
@@ -83,6 +83,12 @@ export default function App() {
       if (e.key === 'r' || e.key === 'R') {
         e.preventDefault();
         setCurrentRotation((prev) => ((prev + 1) % 4) as Rotation);
+      } else if (e.key === '1') {
+        setCurrentTool('L');
+      } else if (e.key === '2') {
+        setCurrentTool('J');
+      } else if (e.key === '3') {
+        setCurrentTool('O');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -98,6 +104,17 @@ export default function App() {
   }, [toastMessage]);
 
   // ----- Handlers -----
+  const handleCellContextMenu = useCallback(
+    (e: React.MouseEvent, y: number, x: number) => {
+      e.preventDefault();
+      const cell = occupancyGrid[y][x];
+      if (cell) {
+        setBlocks((prev) => prev.filter((b) => b.id !== cell.blockId));
+      }
+    },
+    [occupancyGrid]
+  );
+
   const handleCellClick = useCallback(
     (y: number, x: number) => {
       if (currentTool === 'Eraser') {
@@ -207,6 +224,7 @@ export default function App() {
         onMouseEnter={() => setHoverCell({ y, x })}
         onMouseLeave={() => setHoverCell(null)}
         onClick={() => handleCellClick(y, x)}
+        onContextMenu={(e) => handleCellContextMenu(e, y, x)}
       />
     );
   };
@@ -237,8 +255,8 @@ export default function App() {
 
       {/* Header */}
       <header className="mb-4">
-        <h1 className="text-2xl font-bold text-gray-800">LoJVisualizer</h1>
-        <p className="text-sm text-gray-500">L / J / O ブロックを自由に配置・検証</p>
+        <h1 className="text-2xl font-bold text-gray-800">Visualizer</h1>
+        <p className="text-sm text-gray-500">1: L / 2: J / 3: O / R: 回転 / 右クリック: 消す</p>
       </header>
 
       <div className="flex flex-col lg:flex-row gap-4">
@@ -270,10 +288,10 @@ export default function App() {
           <div className="bg-white rounded-xl shadow p-4">
             <h2 className="text-sm font-semibold text-gray-600 mb-2">ツール選択</h2>
             <div className="flex flex-wrap gap-2">
-              {toolButton('L', 'L', 'bg-orange-500')}
-              {toolButton('J', 'J', 'bg-blue-500')}
-              {toolButton('O', 'O', 'bg-yellow-400')}
-              {toolButton('Eraser', '🧹 消しゴム', 'bg-gray-500')}
+              {toolButton('L', 'L (1)', 'bg-orange-500')}
+              {toolButton('J', 'J (2)', 'bg-blue-500')}
+              {toolButton('O', 'O (3)', 'bg-yellow-400')}
+              {toolButton('Eraser', '消しゴム（右クリック）', 'bg-gray-500')}
             </div>
           </div>
 
@@ -295,7 +313,7 @@ export default function App() {
               onClick={handleCopyCount}
               className="mt-2 px-3 py-1 bg-gray-700 text-white text-xs rounded hover:bg-gray-800 transition-colors"
             >
-              📋 カウントをコピー
+              カウントをコピー
             </button>
           </div>
 
